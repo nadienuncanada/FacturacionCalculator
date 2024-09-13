@@ -3,3 +3,4 @@ resultado.txt
 archivos/*
 out/*
 .venv/*
+__pycache__/*

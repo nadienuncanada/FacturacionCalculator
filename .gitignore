@@ -1,6 +1,8 @@
 credencial.json
 resultado.txt
 archivos/*
+archivosDescomprimidos/*
 out/*
 .venv/*
 __pycache__/*
+Credentials.txt

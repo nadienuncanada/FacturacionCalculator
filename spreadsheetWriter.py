@@ -5,7 +5,7 @@ import os
 import tkinter as tk
 
 
-def run():
+def run(worksheet_name):
     base_dir = os.path.join(os.path.dirname(__file__))
 
     # Paso 1: Autenticarse con la API de Google
@@ -17,9 +17,9 @@ def run():
 
     # Abrir la hoja de cálculo
     spreadsheet = client.open(
-        "Claves y año 2024")  # Ajusta el nombre
+        "Copia de Claves y anio 2024")  # Ajusta el nombre
     # Ajusta el nombre de la pestaña
-    worksheet = spreadsheet.worksheet("Agosto")
+    worksheet = spreadsheet.worksheet(worksheet_name)
 
     # Paso 2: Leer el archivo txt
     with open(os.path.join(base_dir, 'resultado.txt'), 'r') as file:

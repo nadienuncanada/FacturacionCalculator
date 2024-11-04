@@ -23,7 +23,7 @@ def login(credencial, path_to_chromedriver, download_path):
     wait = WebDriverWait(driver, 10)
 
     try:
-        print(f"Autenticando usuario: {user}")
+        # print(f"Autenticando usuario: {user}")
 
         # Abrir la página de login
         driver.get("https://auth.afip.gob.ar/contribuyente_/login.xhtml")
@@ -34,7 +34,7 @@ def login(credencial, path_to_chromedriver, download_path):
         cuil.send_keys(user)
 
         # Hacer click en siguiente
-        btnSiguiente = wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, 'input[name="F1:btnSiguiente"]'))).click()
+        wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, 'input[name="F1:btnSiguiente"]'))).click()
 
         # Ingresar contraseña
         password = wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, 'input[name="F1:password"]')))
@@ -42,7 +42,7 @@ def login(credencial, path_to_chromedriver, download_path):
         password.send_keys(password_txt)
 
         # Ingresar
-        btnSiguiente = wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, 'input[name="F1:btnIngresar"]'))).click()
+        wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, 'input[name="F1:btnIngresar"]'))).click()
 
         # Buscar la sección "Mis Comprobantes"
         misComprobantes = wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, 'input[id="buscadorInput"]')))
@@ -50,42 +50,40 @@ def login(credencial, path_to_chromedriver, download_path):
         misComprobantes.send_keys("Mis Comprobantes")
 
         # Hacer click en el item "Mis Comprobantes"
-        comprobante_item = wait.until(EC.presence_of_element_located((By.XPATH, "//li[@aria-label='Mis Comprobantes']"))).click()
+        wait.until(EC.presence_of_element_located((By.XPATH, "//li[@aria-label='Mis Comprobantes']"))).click()
 
         # Comprobar si aparece el cartel emergente
         try:
             cartel = wait.until(EC.presence_of_element_located((By.XPATH, "//div[@class='modal-content' and @role='document']")))
-            if cartel:
-                print("Esta cuenta no cuenta con la sección Mis Comprobantes. Se omite este usuario.")
-                return
+            #  if cartel:
+            #      return(f"{user} cuenta no cuenta con la sección Mis Comprobantes.")
 
         except:
-            print("Esta cuenta cuenta con la sección Mis Comprobantes")
             # Cambiar a la nueva pestaña
             wait.until(lambda d: len(d.window_handles) > 1)
             driver.switch_to.window(driver.window_handles[-1])
 
             # Hacer click en "Emitidos"
-            emitidos_button = wait.until(EC.element_to_be_clickable((By.XPATH, "//h3[text()='Emitidos']/ancestor::a"))).click()
+            wait.until(EC.element_to_be_clickable((By.XPATH, "//h3[text()='Emitidos']/ancestor::a"))).click()
 
             # Seleccionar "Mes pasado"
-            fechaEmision = wait.until(EC.element_to_be_clickable((By.ID, "fechaEmision"))).click()
-            mes_pasado = wait.until(EC.presence_of_element_located((By.XPATH, "//li[@data-range-key='Mes Pasado']"))).click()
+            wait.until(EC.element_to_be_clickable((By.ID, "fechaEmision"))).click()
+            wait.until(EC.presence_of_element_located((By.XPATH, "//li[@data-range-key='Mes Pasado']"))).click()
 
             # Buscar los comprobantes
-            buscarComprobantes = wait.until(EC.element_to_be_clickable((By.ID, "buscarComprobantes"))).click()
+            wait.until(EC.element_to_be_clickable((By.ID, "buscarComprobantes"))).click()
 
             # Exportar como CSV
-            exportar_csv_button = wait.until(EC.element_to_be_clickable((By.XPATH, "//button[@title='Exportar como CSV']"))).click()
+            wait.until(EC.element_to_be_clickable((By.XPATH, "//button[@title='Exportar como CSV']"))).click()
 
             # Tiempo de espera para la descarga del archivo
             time.sleep(3)
 
     except Exception as e:
-        print(f"Error con el usuario {user}: {e}")
+        return(f"Error con el usuario {user}")
     finally:
         driver.quit()
-        print(f"Proceso finalizado para el usuario {user}")
+        return(f"Proceso finalizado para el usuario {user}")
 
 
 

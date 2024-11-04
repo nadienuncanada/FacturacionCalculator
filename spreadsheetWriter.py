@@ -2,8 +2,8 @@ import gspread
 from oauth2client.service_account import ServiceAccountCredentials
 import re
 import os
-import tkinter as tk
 
+worksheet_name = "Octubre"
 
 def run(worksheet_name):
     base_dir = os.path.join(os.path.dirname(__file__))
@@ -16,9 +16,7 @@ def run(worksheet_name):
     client = gspread.authorize(creds)
 
     # Abrir la hoja de cálculo
-    spreadsheet = client.open(
-        "Copia de Claves y anio 2024")  # Ajusta el nombre
-    # Ajusta el nombre de la pestaña
+    spreadsheet = client.open("A Copia de Claves y anio 2024")
     worksheet = spreadsheet.worksheet(worksheet_name)
 
     # Paso 2: Leer el archivo txt
@@ -26,27 +24,53 @@ def run(worksheet_name):
         data = file.read()
 
     # Paso 3: Extraer la información relevante con expresiones regulares
-    patron_cuit = re.compile(r"Cuit: (\d+)")
-    patron_vta = re.compile(r"Punto de Venta\s*\d+\s+([\d,\.]+)")
+    patron_cuit = re.compile(r"Cuit\s*(\d{11})")
+    patron_vta = re.compile(r"^\d+:\s*([\d,]+)", re.MULTILINE)
 
-    # Buscar todos los CUITs y los puntos de venta
-    cuit_list = patron_cuit.findall(data)
-    vta_list = patron_vta.findall(data)
+    # Crear un diccionario para almacenar múltiples "Puntos de Venta" por CUIT
+    cuit_vta_dict = {}
+    # Dividir el contenido por líneas y eliminar líneas en blanco
+    lines = data.strip().splitlines()
+    
+    current_cuit = None
+    for line in lines:
+        cuit_match = patron_cuit.search(line)
+        vta_match = patron_vta.search(line)
+        
+        if cuit_match:  # Encontrar un nuevo CUIT
+            current_cuit = cuit_match.group(1)
+            if current_cuit not in cuit_vta_dict:
+                cuit_vta_dict[current_cuit] = []  # Inicializa una lista para este CUIT
+              
+
+        elif vta_match and current_cuit:  # Encontrar un valor de venta
+            value = vta_match.group(1)
+            cuit_vta_dict[current_cuit].append(value)
+            
 
     # Paso 4: Escribir los datos en la hoja de cálculo
     all_values = worksheet.get_all_values()
-    for i, cuit in enumerate(cuit_list):
+    for cuit, vtas in cuit_vta_dict.items():
         found = False
         for row_num, row in enumerate(all_values):
             if cuit in row:
                 found = True
-                # Obtener la columna donde está el CUIT
                 col_num = row.index(cuit)
-                cell_value = worksheet.cell(row_num + 1, col_num + 2).value
-                # Solo actualizar si la celda adyacente está vacía
-                if not cell_value:
-                    worksheet.update_cell(
-                        row_num + 1, col_num + 2, vta_list[i])
-                break
+
+                # Obtener el valor actual en la celda
+                current_value = worksheet.cell(row_num + 1, col_num + 2).value
+                
+                # Crear una cadena con todos los valores separados por coma
+                new_values = ', '.join(vtas)
+                if(len(vtas) > 1):
+                  new_values = f"(la cuit tiene mas de un punto de venta) {new_values}"
+
+                # Solo actualizar si no están ya presentes
+                if not current_value:  # Si está vacío
+                    print(f"Actualizando CUIT {cuit} con valores de venta: {new_values}")
+                    worksheet.update_cell(row_num + 1, col_num + 2, new_values)
+                
         if not found:
             print(f"CUIT {cuit} no encontrado en la hoja.")
+
+run(worksheet_name)

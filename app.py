@@ -2,7 +2,7 @@ import tkinter as tk
 import adder
 import spreadsheetWriter
 import getCredentials
-import Login
+import multiprocessing_login
 from tkinter import messagebox
 
 def update_result(message):
@@ -15,39 +15,37 @@ def update_message_area(message):
     message_text.config(state=tk.DISABLED)  # Deshabilitar el texto para hacerlo de solo lectura
 
 def run_script_1():
-    try:
-        messages = adder.run()  
-        update_result("Los archivos han sido procesados y el archivo de resultado ha sido generado.")
-        update_message_area(messages) 
-    except Exception as e:
-        update_result(f"Error al procesar archivos: {e}")
+  #Transformar spreadsheet de los datos de todas las cuentas a txt-> Credentials.txt
+  try:
+    res=getCredentials.run()
+    update_result(res)
+  except Exception as e:
+    update_result(f"Error al obtener credenciales: {e}")
+  #Utilizar las credenciales para descargar los archivos mediante multilogeos
+  try:
+    res=multiprocessing_login.run()
+    update_result(res)
+  except Exception as e:
+    update_result(f"Error al iniciar sesión: {e}")
+  #Apartir de todos los archivos csv descargador y descomprimidos en archivosDescomprimidos, realiza los calculo necesarios.
+  try:
+    messages = adder.run()  
+    update_result("Los archivos han sido procesados y el archivo de resultado ha sido generado.")
+    update_message_area(messages) 
+  except Exception as e:
+    update_result(f"Error al procesar archivos: {e}")
 
-def run_script_2():
-    # Obtener los valores de las casillas de entrada
-    worksheet_name = entry1.get()
-
-    try:
-        if not worksheet_name:
-            messagebox.showerror("Error", "El nombre de la pestaña no puede estar vacío.")
-            return
-        spreadsheetWriter.run(worksheet_name)
-        update_result("Los datos han sido cargados en la hoja de cálculo.")
-    except Exception as e:
-        update_result(f"Error al cargar datos: {e}")
-
-def run_script_3():
-    try:
-       res=getCredentials.run()
-       update_result(res)
-    except Exception as e:
-        update_result(f"Error al obtener credenciales: {e}")
-        
-def run_script_4():
-    try:
-        Login.run()
-        update_result("Se ha iniciado sesión correctamente.")
-    except Exception as e:
-        update_result(f"Error al iniciar sesión: {e}")
+  # Obtener los valores de las casillas de entrada
+  worksheet_name = entry1.get()
+  # Cargar los datos en la hoja de cálculo que el adder dejo.
+  try:
+    if not worksheet_name:
+      messagebox.showerror("Error", "El nombre de la pestaña no puede estar vacío.")
+      return
+    spreadsheetWriter.run(worksheet_name)
+    update_result("Los datos han sido cargados en la hoja de cálculo.")
+  except Exception as e:
+    update_result(f"Error al cargar datos: {e}")
 
 # Crear la ventana principal
 root = tk.Tk()
@@ -59,26 +57,14 @@ result_text = tk.StringVar()
 result_label = tk.Label(root, textvariable=result_text, wraplength=500)
 result_label.pack(pady=20)
 
-# Botón para ejecutar el tercer script
-button3 = tk.Button(root, text="Conseguir Credenciales", command=run_script_3, width=20, height=2, font=('Arial', 14))
-button3.pack(pady=10)
-
-# Botón para ejecutar el cuarto script
-button4 = tk.Button(root, text="Conseguir archivos", command=run_script_4, width=20, height=2, font=('Arial', 14))
-button4.pack(pady=10)
-
-# Botón para ejecutar el primer script
-button1 = tk.Button(root, text="Procesar archivos", command=run_script_1, width=20, height=2, font=('Arial', 14))
-button1.pack(pady=10)
-
 # Crear una etiqueta y un campo de entrada para el nombre de la pestaña
-tk.Label(root, text="Nombre de la pestaña:", font=('Arial', 12)).pack(pady=5)
+tk.Label(root, text="Nombre de la pestaña(MesDeLaHoja):", font=('Arial', 12)).pack(pady=5)
 entry1 = tk.Entry(root, font=('Arial', 12), width=40)
 entry1.pack(pady=5)
 
-# Botón para ejecutar el segundo script
-button2 = tk.Button(root, text="Subir datos", command=run_script_2, width=20, height=2, font=('Arial', 14))
-button2.pack(pady=10)
+# Botón para ejecutar el primer script
+button1 = tk.Button(root, text="Ejecutar codigo :)", command=run_script_1, width=20, height=2, font=('Arial', 14))
+button1.pack(pady=10)
 
 # Crear un área de texto para mostrar mensajes específicos de spreadsheetWriter
 message_text = tk.Text(root, height=10, width=70)  # Ajusta el tamaño según necesites

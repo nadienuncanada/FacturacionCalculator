@@ -16,9 +16,9 @@ def run():
 
   # Abrir la hoja de cálculo
   spreadsheet = client.open(
-      "Copia de Claves y anio 2024")  # Ajusta el nombre
+      "A Copia de Claves y anio 2024")  # Ajusta el nombre
   # Ajusta el nombre de la pestaña
-  worksheet = spreadsheet.worksheet("Copia de Claves")
+  worksheet = spreadsheet.worksheet("Claves 2024 clientes mensuales")
   try:
     data = worksheet.get_all_values()
 
@@ -38,4 +38,3 @@ def run():
     return "las credenciales han sido obtenidas y guardadas en el archivo Credentials.txt."
   except Exception as e:
     return f"Error al obtener las credenciales: {e}"
-run()

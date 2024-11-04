@@ -2,8 +2,8 @@ import os
 import glob
 import zipfile
 # Ruta al directorio donde se descargan los archivos
-download_path = r"C:\FacturacionCalculator\archivos"
-extract_path= r"C:\FacturacionCalculator\archivosDescomprimidos"
+download_path = os.path.abspath(r".\archivos")
+extract_path= os.path.abspath(r".\archivosDescomprimidos")
 # Función para descomprimir un archivo ZIP y eliminar el archivo original
 def unzip_and_delete(zip_file, extract_to):
     try:
@@ -38,18 +38,14 @@ def clean_download_folder(download_path):
             print(f"No se pudo eliminar {file}: {e}")
 
 def run():
-    # Ruta al directorio donde se descargan los archivos
-    download_path = r"C:\FacturacionCalculator\archivos"
-    extract_path= r"C:\FacturacionCalculator\archivosDescomprimidos"
-
     # Limpiar la carpeta donde se van a extraer los archivos
     clean_download_folder(extract_path)  
 
     # Descomprimir todos los archivos ZIP en la carpeta de extraidos
-    unzip_all_in_folder(extract_path)
+    unzip_all_in_folder(download_path,extract_path)
 
     # # Limpiar la carpeta archivos descargados
     # clean_download_folder(download_path) 
 
 
-    print("Proceso de descompresión y limpieza finalizado.")
+    return("Proceso de descompresión y limpieza finalizado.")

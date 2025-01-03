@@ -39,7 +39,7 @@ def clean_download_folder(download_path):
 
 def run():
     # Limpiar la carpeta donde se van a extraer los archivos
-    clean_download_folder(extract_path)  
+    # clean_download_folder(extract_path)  
 
     # Descomprimir todos los archivos ZIP en la carpeta de extraidos
     unzip_all_in_folder(download_path,extract_path)

@@ -58,4 +58,3 @@ def run():
                   # Para separar los registros con una línea en blanco
                   output_file.write("\n")
     return "\n".join(messages)
-run()

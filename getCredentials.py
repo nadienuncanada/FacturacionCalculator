@@ -33,8 +33,11 @@ def run():
     output_file = os.path.join(base_dir, "Credentials.txt")
     with open(output_file, 'w', encoding='utf-8') as f:
       # Iterar sobre las filas filtradas y escribir en el archivo
-      for fila in filas_filtradas:
-          f.write(f"[{fila[3]}] [{fila[6]}]\n")  # Formato [columna 4] [columna 7]
-    return "las credenciales han sido obtenidas y guardadas en el archivo Credentials.txt."
+      for i, fila in enumerate(filas_filtradas):
+          # Agregar un salto de línea solo si no es la última fila
+          if i < len(filas_filtradas) - 1:
+              f.write(f"[{fila[3]}] [{fila[6]}]\n")
+          else:
+              f.write(f"[{fila[3]}] [{fila[6]}]")
   except Exception as e:
     return f"Error al obtener las credenciales: {e}"

@@ -20,7 +20,7 @@ def login(credencial, path_to_chromedriver, download_path):
     service = Service(executable_path=path_to_chromedriver)
     driver = webdriver.Chrome(service=service, options=chrome_options)
     driver.maximize_window()
-    wait = WebDriverWait(driver, 10)
+    wait = WebDriverWait(driver, 5)
 
     try:
         # print(f"Autenticando usuario: {user}")
@@ -44,20 +44,23 @@ def login(credencial, path_to_chromedriver, download_path):
         # Ingresar
         wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, 'input[name="F1:btnIngresar"]'))).click()
 
-        # Buscar la sección "Mis Comprobantes"
-        misComprobantes = wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, 'input[id="buscadorInput"]')))
-        misComprobantes.clear()
-        misComprobantes.send_keys("Mis Comprobantes")
+        # Verificar si muestra cartel de cambiar contraseña
+        try:
+          wait.until(EC.find_elements(By.XPATH, "//form[@id='F1']"))
+          return(f"Usuario {user} debe cambiar la contraseña.")
+        except: 
+          # Buscar la sección "Mis Comprobantes"
+          misComprobantes = wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, 'input[id="buscadorInput"]')))
+          misComprobantes.clear()
+          misComprobantes.send_keys("Mis Comprobantes")
 
-        # Hacer click en el item "Mis Comprobantes"
-        wait.until(EC.presence_of_element_located((By.XPATH, "//li[@aria-label='Mis Comprobantes']"))).click()
-
+          # Hacer click en el item "Mis Comprobantes"
+          wait.until(EC.presence_of_element_located((By.XPATH, "//li[@aria-label='Mis Comprobantes']"))).click()
         # Comprobar si aparece el cartel emergente
         try:
             cartel = wait.until(EC.presence_of_element_located((By.XPATH, "//div[@class='modal-content' and @role='document']")))
-            #  if cartel:
-            #      return(f"{user} cuenta no cuenta con la sección Mis Comprobantes.")
-
+            if cartel:
+              return(f"{user} cuenta no cuenta con la sección Mis Comprobantes.")
         except:
             # Cambiar a la nueva pestaña
             wait.until(lambda d: len(d.window_handles) > 1)
@@ -80,10 +83,10 @@ def login(credencial, path_to_chromedriver, download_path):
             time.sleep(3)
 
     except Exception as e:
-        return(f"Error con el usuario {user}")
+        return(f"Error con el usuario {user}, verificar manualmente!")
     finally:
         driver.quit()
-        return(f"Proceso finalizado para el usuario {user}")
+        # return(f"Proceso finalizado para el usuario {user}")
 
 
 

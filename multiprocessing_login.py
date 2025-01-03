@@ -4,7 +4,7 @@ import os
 import descomprimir
 from multiprocessing import Pool
 
-def run_multiprocessing():
+def run():
     # Ruta al archivo chromedriver.exe
     path_to_chromedriver = r".\chromedriver\chromedriver.exe"
     # Configura tu driver de Selenium donde se descargarán los archivos
@@ -21,9 +21,8 @@ def run_multiprocessing():
     pool.close()
     pool.join()
 
-    #descomprimir.run()#Descomprime los archivos descargados en la carpeta archivosDescomprimidos
+    descomprimir.run() #Descomprime los archivos descargados en la carpeta archivosDescomprimidos para que el adder pueda trabajar con ellos.
     return("Proceso de login múltiple completado.")
 
-
-if __name__ == "__main__":
-    run_multiprocessing()
+if __name__ == '__main__':
+    run()

@@ -3,11 +3,9 @@ from oauth2client.service_account import ServiceAccountCredentials
 import re
 import os
 
-worksheet_name = "Octubre"
-
 def run(worksheet_name):
-    base_dir = os.path.join(os.path.dirname(__file__))
-
+    base_dir = os.path.dirname(__file__)
+    
     # Paso 1: Autenticarse con la API de Google
     scope = ["https://spreadsheets.google.com/feeds",
              "https://www.googleapis.com/auth/drive"]
@@ -27,29 +25,26 @@ def run(worksheet_name):
     patron_cuit = re.compile(r"Cuit\s*(\d{11})")
     patron_vta = re.compile(r"^\d+:\s*([\d,]+)", re.MULTILINE)
 
-    # Crear un diccionario para almacenar múltiples "Puntos de Venta" por CUIT
     cuit_vta_dict = {}
-    # Dividir el contenido por líneas y eliminar líneas en blanco
     lines = data.strip().splitlines()
-    
     current_cuit = None
+
     for line in lines:
         cuit_match = patron_cuit.search(line)
         vta_match = patron_vta.search(line)
         
-        if cuit_match:  # Encontrar un nuevo CUIT
+        if cuit_match:
             current_cuit = cuit_match.group(1)
             if current_cuit not in cuit_vta_dict:
-                cuit_vta_dict[current_cuit] = []  # Inicializa una lista para este CUIT
-              
-
-        elif vta_match and current_cuit:  # Encontrar un valor de venta
+                cuit_vta_dict[current_cuit] = []
+        elif vta_match and current_cuit:
             value = vta_match.group(1)
             cuit_vta_dict[current_cuit].append(value)
-            
 
     # Paso 4: Escribir los datos en la hoja de cálculo
+    messages = []
     all_values = worksheet.get_all_values()
+
     for cuit, vtas in cuit_vta_dict.items():
         found = False
         for row_num, row in enumerate(all_values):
@@ -59,18 +54,21 @@ def run(worksheet_name):
 
                 # Obtener el valor actual en la celda
                 current_value = worksheet.cell(row_num + 1, col_num + 2).value
-                
+
                 # Crear una cadena con todos los valores separados por coma
                 new_values = ', '.join(vtas)
-                if(len(vtas) > 1):
-                  new_values = f"(la cuit tiene mas de un punto de venta) {new_values}"
+                if len(vtas) > 1:
+                    new_values = f"(la cuit tiene más de un punto de venta) {new_values}"
 
                 # Solo actualizar si no están ya presentes
-                if not current_value:  # Si está vacío
-                    print(f"Actualizando CUIT {cuit} con valores de venta: {new_values}")
+                if not current_value:
                     worksheet.update_cell(row_num + 1, col_num + 2, new_values)
-                
+                    messages.append(f"Actualizado CUIT {cuit} con valores de venta: {new_values}")
+                else:
+                    print(f"CUIT {cuit} ya tiene valores. No se actualizó.")
+        
         if not found:
-            print(f"CUIT {cuit} no encontrado en la hoja.")
+            messages.append(f"CUIT {cuit} no encontrado en la hoja.")
 
-run(worksheet_name)
+    # Devolver los mensajes acumulados
+    return "\n".join(messages)

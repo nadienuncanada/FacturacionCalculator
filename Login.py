@@ -46,7 +46,7 @@ def login(credencial, path_to_chromedriver, download_path):
 
         # Verificar si muestra cartel de cambiar contraseña
         try:
-          wait.until(EC.find_elements(By.XPATH, "//form[@id='F1']"))
+          wait.until(EC.presence_of_element_located((By.NAME, "F1:j_idt41")))
           return(f"Usuario {user} debe cambiar la contraseña.")
         except: 
           # Buscar la sección "Mis Comprobantes"
@@ -86,7 +86,6 @@ def login(credencial, path_to_chromedriver, download_path):
         return(f"Error con el usuario {user}, verificar manualmente!")
     finally:
         driver.quit()
-        # return(f"Proceso finalizado para el usuario {user}")
 
 
 

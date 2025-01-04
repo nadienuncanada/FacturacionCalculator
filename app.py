@@ -33,16 +33,17 @@ def run_script_1():
         messagebox.showerror(
             "Error", "El nombre de la pestaña no puede estar vacío.")
         return
-    try:
-        res = getCredentials.run()
-        update_result(res)
-    except Exception as e:
-        update_result(f"Error al obtener credenciales: {e}")
+    # try:
+    #     res = getCredentials.run()
+    #     update_result(res)
+    # except Exception as e:
+    #     update_result(f"Error al obtener credenciales: {e}")
 
     try:
         # Inicia los procesos de login
-        login_pool = multiprocessing_login.start_login_processes()
-        update_message2_area("Procesos de login iniciados.")
+        results = multiprocessing_login.run()
+        update_message2_area("\n".join(results))
+        update_result("Los procesos de login han finalizado.")
     except Exception as e:
         update_result(f"Error al iniciar sesión: {e}")
 
@@ -54,12 +55,12 @@ def run_script_1():
     except Exception as e:
         update_result(f"Error al procesar archivos: {e}")
 
-    try:
-        messages = spreadsheetWriter.run(worksheet_name)
-        update_message_area(messages)
-        update_result("Los datos han sido cargados en la hoja de cálculo.")
-    except Exception as e:
-        update_result(f"Error al cargar datos: {e}")
+    # try:
+    #     messages = spreadsheetWriter.run(worksheet_name)
+    #     update_message_area(messages)
+    #     update_result("Los datos han sido cargados en la hoja de cálculo.")
+    # except Exception as e:
+    #     update_result(f"Error al cargar datos: {e}")
 
 
 def on_closing():
@@ -82,7 +83,7 @@ if __name__ == "__main__":
     result_label = tk.Label(root, textvariable=result_text, wraplength=500)
     result_label.pack(pady=20)
 
-    tk.Label(root, text="Nombre de la pestaña(MesDeLaHoja):",
+    tk.Label(root, text="Nombre de la pestaña(Mes de la Hoja):",
              font=('Arial', 12)).pack(pady=5)
     entry1 = tk.Entry(root, font=('Arial', 12), width=40)
     entry1.pack(pady=5)

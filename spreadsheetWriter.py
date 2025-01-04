@@ -64,8 +64,8 @@ def run(worksheet_name):
                 if not current_value:
                     worksheet.update_cell(row_num + 1, col_num + 2, new_values)
                     messages.append(f"Actualizado CUIT {cuit} con valores de venta: {new_values}")
-                else:
-                    print(f"CUIT {cuit} ya tiene valores. No se actualizó.")
+                # else:
+                    # print(f"CUIT {cuit} ya tiene valores. No se actualizó.")
         
         if not found:
             messages.append(f"CUIT {cuit} no encontrado en la hoja.")

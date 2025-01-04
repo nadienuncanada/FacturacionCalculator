@@ -13,7 +13,7 @@ def unzip_and_delete(zip_file, extract_to):
         with zipfile.ZipFile(zip_file, 'r') as zip_ref:
             # Extrae todos los archivos a la carpeta especificada
             zip_ref.extractall(extract_to)
-            print(f"Archivo descomprimido: {zip_file}")
+            # print(f"Archivo descomprimido: {zip_file}")
 
         # # Borra el archivo ZIP original
         # os.remove(zip_file)

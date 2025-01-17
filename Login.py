@@ -6,7 +6,7 @@ from selenium.webdriver.support import expected_conditions as EC
 import time
 
 
-def login(credencial, path_to_chromedriver, download_path):
+def login(credencial, path_to_chromedriver, download_path, selected_option_facturacion):
     user, password_txt = credencial
     chrome_options = webdriver.ChromeOptions()
     chrome_options.add_experimental_option("prefs", {
@@ -15,7 +15,7 @@ def login(credencial, path_to_chromedriver, download_path):
         "download.directory_upgrade": True,
         "safebrowsing.enabled": True
     })
-    
+
     # Crea el servicio de ChromeDriver y el WebDriver dentro del proceso
     service = Service(executable_path=path_to_chromedriver)
     driver = webdriver.Chrome(service=service, options=chrome_options)
@@ -29,63 +29,94 @@ def login(credencial, path_to_chromedriver, download_path):
         driver.get("https://auth.afip.gob.ar/contribuyente_/login.xhtml")
 
         # Ingresar usuario
-        cuil = wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, 'input[name="F1:username"]')))
+        cuil = wait.until(EC.element_to_be_clickable(
+            (By.CSS_SELECTOR, 'input[name="F1:username"]')))
         cuil.clear()
         cuil.send_keys(user)
 
         # Hacer click en siguiente
-        wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, 'input[name="F1:btnSiguiente"]'))).click()
+        wait.until(EC.element_to_be_clickable(
+            (By.CSS_SELECTOR, 'input[name="F1:btnSiguiente"]'))).click()
 
         # Ingresar contraseña
-        password = wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, 'input[name="F1:password"]')))
+        password = wait.until(EC.element_to_be_clickable(
+            (By.CSS_SELECTOR, 'input[name="F1:password"]')))
         password.clear()
         password.send_keys(password_txt)
 
         # Ingresar
-        wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, 'input[name="F1:btnIngresar"]'))).click()
+        wait.until(EC.element_to_be_clickable(
+            (By.CSS_SELECTOR, 'input[name="F1:btnIngresar"]'))).click()
+
+        # ver si aparece mensaje de error
+        try:
+            mensaje_error = wait.until(
+                EC.presence_of_element_located((By.ID, "F1:msg")))
+            if "Clave o usuario incorrecto" in mensaje_error.text:
+                return f"Usuario o clave incorrectos para el usuario {user}."
+        except:
+            pass  # Continuar si no aparece el mensaje de error
+
+        # ver si aparece mensaje de error
+        try:
+            mensaje_error = wait.until(
+                EC.presence_of_element_located((By.ID, "F1:msg")))
+            if "El captcha ingresado es incorrecto." in mensaje_error.text:
+                return f"El usuario {user} pide captcha."
+        except:
+            pass  # Continuar si no aparece el mensaje de error
 
         # Verificar si muestra cartel de cambiar contraseña
         try:
-          wait.until(EC.presence_of_element_located((By.NAME, "F1:j_idt41")))
-          return(f"Usuario {user} debe cambiar la contraseña.")
-        except: 
-          # Buscar la sección "Mis Comprobantes"
-          misComprobantes = wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, 'input[id="buscadorInput"]')))
-          misComprobantes.clear()
-          misComprobantes.send_keys("Mis Comprobantes")
+            wait.until(EC.presence_of_element_located((By.NAME, "F1:j_idt41")))
+            return (f"Usuario {user} debe cambiar la contraseña.")
+        except:
+            # Buscar la sección "Mis Comprobantes"
+            misComprobantes = wait.until(EC.element_to_be_clickable(
+                (By.CSS_SELECTOR, 'input[id="buscadorInput"]')))
+            misComprobantes.clear()
+            misComprobantes.send_keys("Mis Comprobantes")
 
-          # Hacer click en el item "Mis Comprobantes"
-          wait.until(EC.presence_of_element_located((By.XPATH, "//li[@aria-label='Mis Comprobantes']"))).click()
+            # Hacer click en el item "Mis Comprobantes"
+            wait.until(EC.presence_of_element_located(
+                (By.XPATH, "//li[@aria-label='Mis Comprobantes']"))).click()
         # Comprobar si aparece el cartel emergente
         try:
-            cartel = wait.until(EC.presence_of_element_located((By.XPATH, "//div[@class='modal-content' and @role='document']")))
+            cartel = wait.until(EC.presence_of_element_located(
+                (By.XPATH, "//div[@class='modal-content' and @role='document']")))
             if cartel:
-              return(f"{user} cuenta no cuenta con la sección Mis Comprobantes.")
+                return (f"{user} cuenta no cuenta con la sección Mis Comprobantes.")
         except:
             # Cambiar a la nueva pestaña
             wait.until(lambda d: len(d.window_handles) > 1)
             driver.switch_to.window(driver.window_handles[-1])
 
             # Hacer click en "Emitidos"
-            wait.until(EC.element_to_be_clickable((By.XPATH, "//h3[text()='Emitidos']/ancestor::a"))).click()
+            wait.until(EC.element_to_be_clickable(
+                (By.XPATH, "//h3[text()='Emitidos']/ancestor::a"))).click()
 
             # Seleccionar "Mes pasado"
-            wait.until(EC.element_to_be_clickable((By.ID, "fechaEmision"))).click()
-            wait.until(EC.presence_of_element_located((By.XPATH, "//li[@data-range-key='Mes Pasado']"))).click()
+            wait.until(EC.element_to_be_clickable(
+                (By.ID, "fechaEmision"))).click()
+            if (selected_option_facturacion == "Mensual"):
+                wait.until(EC.presence_of_element_located(
+                    (By.XPATH, "//li[@data-range-key='Mes Pasado']"))).click()
+            elif (selected_option_facturacion == "Anual"):
+                wait.until(EC.presence_of_element_located(
+                    (By.XPATH, "//li[@data-range-key='Año Pasado']"))).click()
 
             # Buscar los comprobantes
-            wait.until(EC.element_to_be_clickable((By.ID, "buscarComprobantes"))).click()
+            wait.until(EC.element_to_be_clickable(
+                (By.ID, "buscarComprobantes"))).click()
 
             # Exportar como CSV
-            wait.until(EC.element_to_be_clickable((By.XPATH, "//button[@title='Exportar como CSV']"))).click()
+            wait.until(EC.element_to_be_clickable(
+                (By.XPATH, "//button[@title='Exportar como CSV']"))).click()
 
             # Tiempo de espera para la descarga del archivo
             time.sleep(3)
 
     except Exception as e:
-        return(f"Error con el usuario {user}, verificar manualmente!")
+        return (f"Error con el usuario {user}, verificar manualmente!")
     finally:
         driver.quit()
-
-
-

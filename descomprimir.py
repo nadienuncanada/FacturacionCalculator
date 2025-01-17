@@ -1,9 +1,10 @@
 import os
 import glob
 import zipfile
+from routesResolver import get_resource_path
 # Ruta al directorio donde se descargan los archivos
-download_path = os.path.abspath(r".\archivos")
-extract_path = os.path.abspath(r".\archivosDescomprimidos")
+download_path = get_resource_path("archivos")
+extract_path = get_resource_path("archivosDescomprimidos")
 # Función para descomprimir un archivo ZIP y eliminar el archivo original
 
 
@@ -45,10 +46,12 @@ def clean_download_folder(download_path):
             print(f"No se pudo eliminar {file}: {e}")
 
 
-def run():
+def run_clean_download_folder():
     # Limpiar la carpeta donde se van a extraer los archivos
     clean_download_folder(extract_path)
 
+
+def run():
     # Descomprimir todos los archivos ZIP en la carpeta de extraidos
     unzip_all_in_folder(download_path, extract_path)
 

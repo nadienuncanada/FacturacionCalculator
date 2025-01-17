@@ -5,7 +5,7 @@ a = Analysis(
     ['app.py'],
     pathex=[],
     binaries=[],
-    datas=[('archivos', 'archivos'), ('archivosdescomprimidos', 'archivosdescomprimidos'), ('credencial.json', '.'), ('Credentials.txt', '.'), ('iconomama.ico', '.')],
+    datas=[('archivos', 'archivos'), ('archivosdescomprimidos', 'archivosdescomprimidos'), ('iconoInterfaz.ico', '.'), ('credencial.json', '.'), ('Credentials.txt', '.'), ('iconomama.ico', '.'), ('adder.py', '.'), ('descomprimir.py', '.'), ('getCredentials.py', '.'), ('multiprocessing_login.py', '.'), ('spreadsheetWriter.py', '.'), ('routesResolver.py', '.')],
     hiddenimports=[],
     hookspath=[],
     hooksconfig={},

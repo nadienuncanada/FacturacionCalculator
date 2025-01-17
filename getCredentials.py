@@ -3,14 +3,14 @@ from oauth2client.service_account import ServiceAccountCredentials
 import re
 import os
 import tkinter as tk
+from routesResolver import get_resource_path
 
 def run():
-  base_dir = os.path.join(os.path.dirname(__file__))
 
   # Paso 1: Autenticarse con la API de Google
   scope = ["https://spreadsheets.google.com/feeds",
             "https://www.googleapis.com/auth/drive"]
-  creds_path = os.path.join(base_dir, "credencial.json")
+  creds_path = get_resource_path("credencial.json")
   creds = ServiceAccountCredentials.from_json_keyfile_name(creds_path, scope)
   client = gspread.authorize(creds)
 
@@ -30,7 +30,7 @@ def run():
     columna_7 = [fila[6] for fila in filas_filtradas]  # Columna 7 (índice 6)
 
     # Crear archivo .txt para guardar los resultados
-    output_file = os.path.join(base_dir, "Credentials.txt")
+    output_file = get_resource_path("Credentials.txt")
     with open(output_file, 'w', encoding='utf-8') as f:
       # Iterar sobre las filas filtradas y escribir en el archivo
       for i, fila in enumerate(filas_filtradas):

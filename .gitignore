@@ -6,5 +6,6 @@ out/*
 .venv/*
 __pycache__/*
 Credentials.txt
-build/*
-dist/*
+app.build/*
+app.dist/*
+app.exe

@@ -38,7 +38,7 @@ Este proyecto desarrollado en Python automatiza el proceso de obtención de cred
 ## ▶️ Uso
 Ejecutar el script principal para iniciar la interfaz grafica:
 ```bash
-python main.py
+python app.py
 ```
 
 ## ⚠️ Posibles Errores y Soluciones

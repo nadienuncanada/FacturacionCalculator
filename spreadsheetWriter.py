@@ -7,7 +7,7 @@ import os
 def run(worksheet_name, file_name):
     base_dir = os.path.dirname(__file__)
 
-    # Paso 1: Autenticarse con la API de Google
+    # Autenticarse con la API de Google
     scope = ["https://spreadsheets.google.com/feeds",
              "https://www.googleapis.com/auth/drive"]
     creds_path = os.path.join(base_dir, "credencial.json")
@@ -19,20 +19,20 @@ def run(worksheet_name, file_name):
         spreadsheet = client.open(file_name)
         worksheet = spreadsheet.worksheet(worksheet_name)
     except gspread.SpreadsheetNotFound:
-        raise Exception(f"La hoja de cálculo '{
+        raise Exception(f"❌ La hoja de cálculo '{
                         file_name}' no fue encontrada.")
     except gspread.WorksheetNotFound:
-        raise Exception(f"La hoja de trabajo '{
+        raise Exception(f"❌ La hoja de trabajo '{
                         worksheet_name}' no existe en el archivo.")
     except Exception as e:
         raise Exception(
-            f"Se produjo un error al intentar acceder a la hoja: {str(e)}")
+            f"❌ Se produjo un error al intentar acceder a la hoja")
 
-    # Paso 2: Leer el archivo txt
+    # Leer el archivo txt
     with open(os.path.join(base_dir, 'resultado.txt'), 'r') as file:
         data = file.read()
 
-    # Paso 3: Extraer la información relevante con expresiones regulares
+    # Extraer la información relevante con expresiones regulares
     patron_cuit = re.compile(r"Cuit\s*(\d{11})")
     patron_vta = re.compile(r"^(\d+):\s*([\d,]+)", re.MULTILINE)
 
@@ -53,12 +53,12 @@ def run(worksheet_name, file_name):
             value = vta_match.group(2)
             cuit_vta_dict[current_cuit].append((point, value))
 
-    # Paso 4: Escribir los datos en la hoja de cálculo
+    # Escribir los datos en la hoja de cálculo
     messages = []
     all_values = worksheet.get_all_values()
 
     for cuit, vtas in cuit_vta_dict.items():
-        print(f"CUIT: {cuit}, VTAS: {vtas}")
+        print(f"🔍 CUIT: {cuit}, VTAS: {vtas}")
         found = False
         for row_num, row in enumerate(all_values):
             if cuit in row:
@@ -71,20 +71,19 @@ def run(worksheet_name, file_name):
                 if len(vtas) > 1:
                     new_values = ', '.join(
                         [f"Punto {point}: {value}" for point, value in vtas])
-
                 else:
                     new_values = f"{vtas[0][1]}"
 
                 # Solo actualizar si no están ya presentes
                 if not current_value:
                     worksheet.update_cell(row_num + 1, col_num + 2, new_values)
-                    # messages.append(f"Actualizado CUIT {cuit} con valores de venta: {new_values}")
+                    # messages.append(f"✅ Actualizado CUIT {cuit} con valores de venta: {new_values}")
                 else:
                     messages.append(
-                        f"CUIT {cuit} ya tiene valores. No se actualizó.")
+                        f"⚠️ CUIT {cuit} ya tiene valores. No se actualizó.")
 
         if not found:
-            messages.append(f"CUIT {cuit} no encontrado en la hoja.")
+            messages.append(f"❌ CUIT {cuit} no encontrado en la hoja.")
 
     # Devolver los mensajes acumulados
     return "\n".join(messages)

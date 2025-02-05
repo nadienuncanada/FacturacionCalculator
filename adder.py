@@ -7,7 +7,7 @@ def run():
     messages = []
 
     def procesar_archivo(archivo):
-        # Cargar el archivo CSV en un DataFrame
+
         df = pd.read_csv(archivo, sep=';')
 
         # Convertir la columna 'Imp. Total' a números
@@ -19,9 +19,9 @@ def run():
             'Imp. Total'].sum().reindex(df['Punto de Venta'].unique(), fill_value=0)
 
         if tipo_13.empty:
-            tipo_13 = pd.Series(dtype=float)  # Mantiene el tipo de serie
+            tipo_13 = pd.Series(dtype=float)
         if no_tipo_13.empty:
-            no_tipo_13 = pd.Series(dtype=float)  # Mantiene el tipo de serie
+            no_tipo_13 = pd.Series(dtype=float)
 
         # Restar los valores donde el tipo de comprobante es 13
         suma_por_punto_venta = no_tipo_13 - tipo_13
@@ -34,29 +34,18 @@ def run():
         else:
             return "\n".join(f"{punto_venta}: {str(valor).replace('.', ',')}" for punto_venta, valor in resultado.items() if valor != 0)
 
-    # Directorio que contiene los archivos CSV
     directorio = (get_resource_path('archivosDescomprimidos'))
 
-    # Obtener la lista de archivos en el directorio
     archivos = os.listdir(directorio)
 
     # Abrir el archivo de salida
     with open(get_resource_path('resultado.txt'), 'w') as output_file:
-        # Iterar sobre cada archivo en el directorio
         for archivo in archivos:
-            # Comprobar si es un archivo CSV
             if archivo.endswith('.csv'):
-                # Obtener la sexta parte del nombre del archivo
                 nombre_archivo = archivo.split('_')[5]
-
-                # Ruta completa del archivo
                 ruta_completa = os.path.join(directorio, archivo)
-
-                # Llamamos a la función para procesar el archivo y obtener la suma por punto de venta
                 suma_por_punto_venta = procesar_archivo(ruta_completa)
-                # Escribir en el archivo de salida
                 output_file.write(f"Cuit {nombre_archivo}\n")
                 output_file.write(f"{suma_por_punto_venta}\n")
-                # Para separar los registros con una línea en blanco
                 output_file.write("\n")
     return "\n".join(messages)

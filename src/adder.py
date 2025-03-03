@@ -34,12 +34,12 @@ def run():
         else:
             return "\n".join(f"{punto_venta}: {str(valor).replace('.', ',')}" for punto_venta, valor in resultado.items() if valor != 0)
 
-    directorio = (get_resource_path('archivosDescomprimidos'))
+    directorio = (get_resource_path(r'data\archivosDescomprimidos'))
 
     archivos = os.listdir(directorio)
 
     # Abrir el archivo de salida
-    with open(get_resource_path('resultado.txt'), 'w') as output_file:
+    with open(get_resource_path(r'./data/resultado.txt'), 'w') as output_file:
         for archivo in archivos:
             if archivo.endswith('.csv'):
                 nombre_archivo = archivo.split('_')[5]

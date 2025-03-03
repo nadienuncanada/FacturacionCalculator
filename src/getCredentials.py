@@ -11,13 +11,14 @@ def run():
     # Paso 1: Autenticarse con la API de Google
     scope = ["https://spreadsheets.google.com/feeds",
              "https://www.googleapis.com/auth/drive"]
-    creds_path = get_resource_path("credencial.json")
+    creds_path = get_resource_path(r".\config\credencial.json")
+
     creds = ServiceAccountCredentials.from_json_keyfile_name(creds_path, scope)
     client = gspread.authorize(creds)
 
     spreadsheet = client.open(
-        "Claves y anio 2024")
-    worksheet = spreadsheet.worksheet("Claves 2024 clientes mensuales")
+        "2025 claves y facturaciones")
+    worksheet = spreadsheet.worksheet("claves mensuales")
     try:
         data = worksheet.get_all_values()
 
@@ -30,7 +31,7 @@ def run():
         columna_7 = [fila[6] for fila in filas_filtradas]
 
         # Crear archivo .txt para guardar los resultados
-        output_file = get_resource_path("Credentials.txt")
+        output_file = get_resource_path(r".\data\Credentials.txt")
         with open(output_file, 'w', encoding='utf-8') as f:
             for i, fila in enumerate(filas_filtradas):
                 if i < len(filas_filtradas) - 1:

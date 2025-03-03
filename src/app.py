@@ -3,14 +3,14 @@ import sys
 import threading
 import time
 import tkinter as tk
-import adder
-import spreadsheetWriter
-import getCredentials
-import multiprocessing_login
+import adder as adder
+import spreadsheetWriter as spreadsheetWriter
+import getCredentials as getCredentials
+import multiprocessing_login as multiprocessing_login
 from tkinter import Toplevel, messagebox
 import multiprocessing
 import os
-import descomprimir
+import descomprimir as descomprimir
 from routesResolver import get_resource_path
 import psutil
 
@@ -118,7 +118,7 @@ def run_script_1():
 
 def get_credentials_list():
     """Obtiene la lista de credenciales desde el archivo."""
-    credentials_file = get_resource_path("Credentials.txt")
+    credentials_file = get_resource_path(r".\data\Credentials.txt")
     with open(credentials_file, 'r', encoding='utf-8') as file:
         credentials = [line.strip().replace('[', '').replace(']', '').split()
                        for line in file.readlines()]
@@ -126,13 +126,24 @@ def get_credentials_list():
 
 
 def run_spreadsheet_writer():
-    file_name = selected_option.get()
+
+    file_name = input_field.get() if selected_option.get(
+    ) == "Otro" else selected_option.get()
+
     worksheet_name = entry1.get()
+
     if not worksheet_name:
         messagebox.showerror(
             "Error", "❌ El nombre de la pestaña no puede estar vacío.")
         return
+
+    if file_name == "Otro" or not file_name.strip():
+        messagebox.showerror(
+            "Error", "❌ Debes ingresar un nombre de archivo válido.")
+        return
+
     try:
+
         messages = spreadsheetWriter.run(worksheet_name, file_name)
         update_message3_area(f"{messages}")
         update_result("✅ Los datos han sido cargados en la hoja de cálculo.")
@@ -246,7 +257,7 @@ def on_leave(e, button, original_color):
 
 
 def open_file_explorer():
-    folder_path = get_resource_path("archivosDescomprimidos")
+    folder_path = get_resource_path(r"data\archivosDescomprimidos")
     os.startfile(folder_path)
 
 
@@ -256,9 +267,9 @@ if __name__ == "__main__":
 
     root.config(bg="#ffe5ee")
 
-    root.iconbitmap(get_resource_path('iconoInterfaz.ico'))
+    root.iconbitmap(get_resource_path(r'.\assets\iconoInterfaz.ico'))
     root.title("Facturador")
-    root.geometry("1000x800")
+    root.geometry("1000x1000")
 
     button_color = "#d3a6cc"
     hover_color = "#dbbad6"
@@ -365,17 +376,37 @@ if __name__ == "__main__":
       message_text2.grid(row=1, column=1, padx=5, pady=5)
       message_text2.config(state=tk.DISABLED) """
 
+    tk.Label(root, text="Nombre del archivo:",
+             font=('Arial', 12), bg="#ffe5ee", fg=text_color).pack(pady=5)
     # Lista desplegable con opciones
-    options = ["Claves y anio 2024", "Facturacion anual"]
+    options = ["2025 claves y facturaciones", "Facturacion anual", "Otro"]
 
+    # Variable para almacenar la opción seleccionada
     selected_option = tk.StringVar(root)
-    selected_option.set(options[0])
+    selected_option.set(options[0])  # Establecer un valor por defecto
+
+    # Función para actualizar el campo de entrada cuando se selecciona "Otro"
+
+    def update_input_field(*args):
+        if selected_option.get() == "Otro":
+            # Habilitar el campo de entrada
+            input_field.config(state=tk.NORMAL)
+        else:
+            # Deshabilitar el campo de entrada
+            input_field.config(state=tk.DISABLED)
 
     # Crear el OptionMenu
     dropdown_menu = tk.OptionMenu(root, selected_option, *options)
-    dropdown_menu.config(font=('Arial', 12), bg=text_box_bg,
-                         fg=text_color)
+    dropdown_menu.config(font=('Arial', 12), bg=text_box_bg, fg=text_color)
     dropdown_menu.pack(pady=5)
+
+    # Crear el campo de entrada para ingresar un valor
+    input_field = tk.Entry(root, state=tk.DISABLED, font=(
+        'Arial', 12), bg=text_box_bg, fg=text_color)
+    input_field.pack(pady=5)
+
+    # Asociar la función que actualiza el campo de entrada
+    selected_option.trace("w", update_input_field)
 
     # Entrada para "Nombre de la pestaña"
     tk.Label(root, text="Nombre de la hoja de cálculo:",

@@ -1,7 +1,7 @@
 import multiprocessing
-import Login
+import Login as Login
 import os
-import descomprimir
+import descomprimir as descomprimir
 from routesResolver import get_resource_path
 
 
@@ -27,17 +27,17 @@ def login_wrapper(args):
 
 def filtrar_credenciales_procesadas(credentials):
     usuarios_existentes = obtener_usuarios_desde_archivos(
-        get_resource_path("archivosdescomprimidos"))
+        get_resource_path(r"data\archivosdescomprimidos"))
     usuarios_existentes.update(
-        obtener_usuarios_desde_archivos(get_resource_path("archivos"))
+        obtener_usuarios_desde_archivos(get_resource_path(r"data\archivos"))
     )
     return [cred for cred in credentials if cred[0] not in usuarios_existentes]
 
 
 def start_login_processes(periodo_facturacion, counter):
-    path_to_chromedriver = get_resource_path(r"chromedriver\chromedriver.exe")
-    download_path = get_resource_path("archivos")
-    credentials_file = get_resource_path("Credentials.txt")
+    path_to_chromedriver = get_resource_path(r".\drivers\chromedriver.exe")
+    download_path = get_resource_path(r"data\archivos")
+    credentials_file = get_resource_path(r"data/Credentials.txt")
 
     with open(credentials_file, 'r', encoding='utf-8') as file:
         credentials = [line.strip().replace('[', '').replace(']', '').split()

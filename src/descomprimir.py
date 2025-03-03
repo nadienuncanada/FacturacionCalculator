@@ -2,8 +2,8 @@ import os
 import glob
 import zipfile
 from routesResolver import get_resource_path
-extract_path = get_resource_path("archivosDescomprimidos")
-download_path = get_resource_path("archivos")
+extract_path = get_resource_path(r"data\archivosDescomprimidos")
+download_path = get_resource_path(r"data\archivos")
 # Función para descomprimir un archivo ZIP y eliminar el archivo original
 
 

@@ -3,14 +3,15 @@ from oauth2client.service_account import ServiceAccountCredentials
 import re
 import os
 
+from routesResolver import get_resource_path
+
 
 def run(worksheet_name, file_name):
-    base_dir = os.path.dirname(__file__)
 
     # Autenticarse con la API de Google
     scope = ["https://spreadsheets.google.com/feeds",
              "https://www.googleapis.com/auth/drive"]
-    creds_path = os.path.join(base_dir, "credencial.json")
+    creds_path = get_resource_path(r".\config\credencial.json")
     creds = ServiceAccountCredentials.from_json_keyfile_name(creds_path, scope)
     client = gspread.authorize(creds)
 
@@ -18,6 +19,7 @@ def run(worksheet_name, file_name):
         # Abrir la hoja de cálculo
         spreadsheet = client.open(file_name)
         worksheet = spreadsheet.worksheet(worksheet_name)
+
     except gspread.SpreadsheetNotFound:
         raise Exception(f"❌ La hoja de cálculo '{
                         file_name}' no fue encontrada.")
@@ -29,7 +31,8 @@ def run(worksheet_name, file_name):
             f"❌ Se produjo un error al intentar acceder a la hoja")
 
     # Leer el archivo txt
-    with open(os.path.join(base_dir, 'resultado.txt'), 'r') as file:
+    path = get_resource_path(r'data\resultado.txt')
+    with open(path, 'r') as file:
         data = file.read()
 
     # Extraer la información relevante con expresiones regulares
@@ -58,7 +61,7 @@ def run(worksheet_name, file_name):
     all_values = worksheet.get_all_values()
 
     for cuit, vtas in cuit_vta_dict.items():
-        print(f"🔍 CUIT: {cuit}, VTAS: {vtas}")
+        # print(f"🔍 CUIT: {cuit}, VTAS: {vtas}")
         found = False
         for row_num, row in enumerate(all_values):
             if cuit in row:

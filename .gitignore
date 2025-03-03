@@ -1,7 +1,9 @@
 credencial.json
 resultado.txt
-archivos/*
-archivosDescomprimidos/*
+data/archivos/*
+data/archivosDescomprimidos/*
+!data/archivos/.gitkeep
+!data/archivosDescomprimidos/.gitkeep
 out/*
 .venv/*
 __pycache__/*
@@ -11,3 +13,4 @@ app.dist/*
 app.exe
 src/__pycache__/*
 Facturador.exe
+data

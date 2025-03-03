@@ -1,7 +1,9 @@
 credencial.json
 resultado.txt
-archivos/*
-archivosDescomprimidos/*
+data/archivos/*
+data/archivosDescomprimidos/*
+!data/archivos/.gitkeep
+!data/archivosDescomprimidos/.gitkeep
 out/*
 .venv/*
 __pycache__/*

@@ -11,3 +11,4 @@ app.dist/*
 app.exe
 src/__pycache__/*
 Facturador.exe
+data

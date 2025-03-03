@@ -3,14 +3,14 @@ import sys
 import threading
 import time
 import tkinter as tk
-import adder as adder
-import spreadsheetWriter as spreadsheetWriter
-import getCredentials as getCredentials
-import multiprocessing_login as multiprocessing_login
+import adder
+import spreadsheetWriter
+import getCredentials
+import multiprocessing_login
 from tkinter import Toplevel, messagebox
 import multiprocessing
 import os
-import descomprimir as descomprimir
+import descomprimir
 from routesResolver import get_resource_path
 import psutil
 
@@ -76,14 +76,13 @@ def process_files(message_queue, counter):
 def run_script_1():
     global login_processes
     try:
-         # Verificar si la carpeta 'data' existe, si no, crearla
-        data_folder = os.path.join(os.path.dirname(__file__), '..', 'data')
-        if not os.path.exists(data_folder):
-          os.makedirs(data_folder)
-          archivos_folder = os.path.join(data_folder, 'archivos')
-          os.makedirs(archivos_folder)
-          archivos_descomprimidos_folder = os.path.join(data_folder, 'archivosDescomprimidos')
-          os.makedirs(archivos_descomprimidos_folder)
+        # Crear la carpeta 'data' y sus subcarpetas si no existen
+        data_folder = get_resource_path("data")
+        archivos_folder = os.path.join(data_folder, "archivos")
+        archivos_descomprimidos_folder = os.path.join(data_folder, "archivosDescomprimidos")
+
+        os.makedirs(archivos_folder, exist_ok=True)
+        os.makedirs(archivos_descomprimidos_folder, exist_ok=True)
         res = getCredentials.run()
         update_result(res)
     except Exception as e:
@@ -106,15 +105,13 @@ def run_script_1():
     counter = manager.Value('i', 0)  # 'i' indica un entero
 
     # Función para actualizar el contador en la interfaz
-    
-    global total_credentials
-    total_credentials = len(
-      multiprocessing_login.filtrar_credenciales_procesadas(get_credentials_list()))
-    
     def update_counter():
         # Obtener el total de credenciales
+        total_credentials = len(
+            multiprocessing_login.filtrar_credenciales_procesadas(get_credentials_list()))
         completed = counter.value  # Logins completados
-        login_counter.set(f"Completados: {completed} De: {total_credentials}")
+        remaining = total_credentials - completed  # Logins restantes
+        login_counter.set(f"Completados: {completed} / Faltan: {remaining}")
         root.after(1000, update_counter)  # Actualizar cada segundo
 
     message_queue = queue.Queue()
@@ -125,9 +122,10 @@ def run_script_1():
     root.after(100, check_queue, message_queue)
     root.after(1000, update_counter)  # Iniciar la actualización del contador
 
+
 def get_credentials_list():
     """Obtiene la lista de credenciales desde el archivo."""
-    credentials_file = get_resource_path(r".\data\Credentials.txt")
+    credentials_file = get_resource_path("Credentials.txt")
     with open(credentials_file, 'r', encoding='utf-8') as file:
         credentials = [line.strip().replace('[', '').replace(']', '').split()
                        for line in file.readlines()]
@@ -135,24 +133,13 @@ def get_credentials_list():
 
 
 def run_spreadsheet_writer():
-
-    file_name = input_field.get() if selected_option.get(
-    ) == "Otro" else selected_option.get()
-
+    file_name = selected_option.get()
     worksheet_name = entry1.get()
-
     if not worksheet_name:
         messagebox.showerror(
             "Error", "❌ El nombre de la pestaña no puede estar vacío.")
         return
-
-    if file_name == "Otro" or not file_name.strip():
-        messagebox.showerror(
-            "Error", "❌ Debes ingresar un nombre de archivo válido.")
-        return
-
     try:
-
         messages = spreadsheetWriter.run(worksheet_name, file_name)
         update_message3_area(f"{messages}")
         update_result("✅ Los datos han sido cargados en la hoja de cálculo.")
@@ -266,75 +253,39 @@ def on_leave(e, button, original_color):
 
 
 def open_file_explorer():
-    folder_path = get_resource_path(r"data\archivosDescomprimidos")
+    folder_path = get_resource_path("archivosDescomprimidos")
     os.startfile(folder_path)
 
-def update_input_field(*args):
-      if selected_option.get() == "Otro":
-          # Habilitar el campo de entrada
-          input_field.config(state=tk.NORMAL)
-      else:
-          # Deshabilitar el campo de entrada
-          input_field.config(state=tk.DISABLED)
 
 if __name__ == "__main__":
     multiprocessing.set_start_method("spawn")
     root = tk.Tk()
 
-    # Centrar la ventana en la pantalla
     root.config(bg="#ffe5ee")
-    root.iconbitmap(get_resource_path(r'.\assets\iconoInterfaz.ico'))
+
+    root.iconbitmap(get_resource_path('iconoInterfaz.ico'))
     root.title("Facturador")
-
-    # Definir el tamaño de la ventana
-    root.geometry("800x800")
-
-    # Crear el canvas y la barra de desplazamiento
-    canvas = tk.Canvas(root, bg="#ffe5ee")
-    scroll_y = tk.Scrollbar(root, orient="vertical", command=canvas.yview)
-    canvas.config(yscrollcommand=scroll_y.set)
-
-    # Centrar el canvas en la ventana
-    root.grid_rowconfigure(0, weight=1)
-    root.grid_columnconfigure(0, weight=1)
-    canvas.grid(row=0, column=0, sticky="nsew")
-    scroll_y.grid(row=0, column=1, sticky="ns")
-    
-    # Crear un frame dentro del canvas
-    scrollable_frame = tk.Frame(canvas, bg="#ffe5ee")
-
-    # Crear un frame contenedor para centrar el contenido
-    container_frame = tk.Frame(scrollable_frame, bg="#ffe5ee")
-    container_frame.pack(expand=True)
-
-    # Crear un window en el canvas para agregar el frame
-    canvas.create_window((0, 0), window=scrollable_frame, anchor="n")
-
-    # Configurar el scroll
-    scrollable_frame.bind(
-        "<Configure>", lambda e: canvas.configure(scrollregion=canvas.bbox("all")))
-
-    # Habilitar scroll con la rueda del mouse
-    canvas.bind_all("<MouseWheel>", lambda event: canvas.yview_scroll(int(-1*(event.delta/120)), "units"))
+    root.geometry("1000x800")
 
     button_color = "#d3a6cc"
     hover_color = "#dbbad6"
     text_box_bg = "#e7d3e0"
     text_color = "#4b0082"
     label_color = "#ffe5ee"
-
     # Crear el botón de ayuda
     help_button = tk.Button(
-        container_frame,
+        root,
         text="?",
         command=show_help,
         font=('Arial', 10, 'bold'),
         bg="#ffcccb",
+
         width=3,
         height=2,
         borderwidth=2,
         relief="raised"
     )
+
     help_button.place(x=5, y=5)
 
     # Crear un ToolTip para el botón de ayuda
@@ -342,17 +293,18 @@ if __name__ == "__main__":
 
     # Etiqueta para mostrar el resultado
     result_text = tk.StringVar()
-    result_label = tk.Label(container_frame, textvariable=result_text,
+    result_label = tk.Label(root, textvariable=result_text,
                             wraplength=500, font=('Arial', 14), bg="#ffe5ee", fg=text_color)
     result_label.pack(pady=20)
 
     # Lista desplegable con opciones
     options_facturacion = ["Mensual", "Anual"]
+
     selected_option_facturacion = tk.StringVar(root)
     selected_option_facturacion.set(options_facturacion[0])
 
-    # Frame para organizar todos los elementos
-    button_frame = tk.Frame(container_frame, bg="#ffe5ee")
+   # Frame para organizar todos los elementos
+    button_frame = tk.Frame(root, bg="#ffe5ee")
     button_frame.pack(pady=10)
 
     # Crear el OptionMenu dentro del button_frame
@@ -364,13 +316,12 @@ if __name__ == "__main__":
 
     # Variable para el contador de logins
     login_counter = tk.StringVar()
-    login_counter.set("Completados: 0  De: 0")
+    login_counter.set("Completados: 0 / Faltan: 0")
 
     # Etiqueta para mostrar el contador de logins
-    login_counter_label = tk.Label(container_frame, textvariable=login_counter, font=(
+    login_counter_label = tk.Label(root, textvariable=login_counter, font=(
         'Arial', 14), bg="#ffe5ee", fg=text_color)
     login_counter_label.pack(pady=10)
-
     # Crear los botones
     button1 = tk.Button(button_frame, text="Obtener archivos",
                         command=run_script_1, width=20, height=2, font=('Arial', 14), bg=button_color, fg=text_color)
@@ -396,7 +347,7 @@ if __name__ == "__main__":
         e, buttonAbirCarpeta, button_color))
 
     # Frame para organizar los mensajes
-    message_frame = tk.Frame(container_frame, bg="#ffe5ee")
+    message_frame = tk.Frame(root, bg="#ffe5ee")
     message_frame.pack(pady=10)
 
     # Etiqueta para "Mensajes de la descarga de archivos"
@@ -410,48 +361,49 @@ if __name__ == "__main__":
     message_text.grid(row=1, column=0, padx=5, pady=5)
     message_text.config(state=tk.DISABLED)
 
-    # Entrada para "Nombre del archivo:"
-    tk.Label(container_frame, text="Nombre del archivo:",
-             font=('Arial', 12), bg="#ffe5ee", fg=text_color).pack(pady=5)
+    """  # Etiqueta para "Mensajes del sumador"
+      adder_title = tk.Label(
+          message_frame, text="Mensajes del sumador", font=('Arial', 12, 'bold'), bg=label_color, fg=text_color)
+      adder_title.grid(row=0, column=1, padx=5, pady=5)
 
-    options = ["2025 claves y facturaciones", "Facturacion anual", "Otro"]
+      # Cuadro de texto para "Mensajes del sumador"
+      message_text2 = tk.Text(message_frame, height=10,
+                              width=35, bg=text_box_bg, fg=text_color)
+      message_text2.grid(row=1, column=1, padx=5, pady=5)
+      message_text2.config(state=tk.DISABLED) """
+
+    # Lista desplegable con opciones
+    options = ["Claves y anio 2024", "Facturacion anual"]
+
     selected_option = tk.StringVar(root)
     selected_option.set(options[0])
 
-    def update_input_field(*args):
-        if selected_option.get() == "Otro":
-            input_field.config(state=tk.NORMAL)
-        else:
-            input_field.config(state=tk.DISABLED)
-
-    dropdown_menu = tk.OptionMenu(container_frame, selected_option, *options)
-    dropdown_menu.config(font=('Arial', 12), bg=text_box_bg, fg=text_color)
+    # Crear el OptionMenu
+    dropdown_menu = tk.OptionMenu(root, selected_option, *options)
+    dropdown_menu.config(font=('Arial', 12), bg=text_box_bg,
+                         fg=text_color)
     dropdown_menu.pack(pady=5)
 
-    input_field = tk.Entry(container_frame, state=tk.DISABLED, font=(
-        'Arial', 12), bg=text_box_bg, fg=text_color)
-    input_field.pack(pady=5)
-
-    selected_option.trace("w", update_input_field)
-
-    tk.Label(container_frame, text="Nombre de la hoja de cálculo:",
+    # Entrada para "Nombre de la pestaña"
+    tk.Label(root, text="Nombre de la hoja de cálculo:",
              font=('Arial', 12), bg="#ffe5ee", fg=text_color).pack(pady=5)
-
-    entry1 = tk.Entry(container_frame, font=('Arial', 12), width=40,
+    entry1 = tk.Entry(root, font=('Arial', 12), width=40,
                       bg=text_box_bg, fg=text_color)
     entry1.pack(pady=5)
 
-    button2 = tk.Button(container_frame, text="Cargar datos",
+    button2 = tk.Button(root, text="Cargar datos",
                         command=run_spreadsheet_writer, width=20, height=2, font=('Arial', 14), bg=button_color, fg=text_color)
     button2.pack(pady=10)
     button2.bind("<Enter>", lambda e: on_enter(e, button2, hover_color))
     button2.bind("<Leave>", lambda e: on_leave(e, button2, button_color))
 
+    # Etiqueta para "Mensajes del Escritor del SpreadSheet"
     writer_title = tk.Label(
-        container_frame, text="Mensajes del escritor", font=('Arial', 12, 'bold'), bg=label_color, fg=text_color)
+        root, text="Mensajes del escritor", font=('Arial', 12, 'bold'), bg=label_color, fg=text_color)
     writer_title.pack(pady=(10, 0))
 
-    message_text3 = tk.Text(container_frame, height=10, width=100,
+    # Cuadro de texto para "Mensajes del Escritor del SpreadSheet"
+    message_text3 = tk.Text(root, height=10, width=100,
                             bg=text_box_bg, fg=text_color)
     message_text3.pack(pady=20)
     message_text3.config(state=tk.DISABLED)

@@ -9,3 +9,5 @@ Credentials.txt
 app.build/*
 app.dist/*
 app.exe
+src/__pycache__/*
+Facturador.exe

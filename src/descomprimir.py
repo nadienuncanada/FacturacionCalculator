@@ -41,6 +41,16 @@ def clean_download_folder(download_path):
 
 def run_clean_download_folder():
     # Limpiar la carpeta donde se van a extraer los archivos
+    clean_download_folder(download_path)
+
+
+def count_files_in_folder():
+    files = glob.glob(os.path.join(extract_path, '*'))
+    return len(files)
+
+
+def run_clean_extract_folder():
+    # Limpiar la carpeta donde se van a extraer los archivos
     clean_download_folder(extract_path)
 
 

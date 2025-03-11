@@ -59,6 +59,7 @@ def process_files(message_queue, counter):
 
         message_queue.put(
             (final_message, "✅ Los procesos de login han finalizado."))
+        update_files_counter()
     except Exception as e:
         error_message = f"❌ Error al iniciar sesiones (pedí ayuda, probablemente se actualizó Chrome)"
         message_queue.put((None, error_message))
@@ -74,20 +75,14 @@ def process_files(message_queue, counter):
 
 
 def run_script_1():
+    update_files_counter()
     global login_processes
-    try:
-         # Verificar si la carpeta 'data' existe, si no, crearla
-        data_folder = os.path.join(os.path.dirname(__file__), '..', 'data')
-        if not os.path.exists(data_folder):
-          os.makedirs(data_folder)
-          archivos_folder = os.path.join(data_folder, 'archivos')
-          os.makedirs(archivos_folder)
-          archivos_descomprimidos_folder = os.path.join(data_folder, 'archivosDescomprimidos')
-          os.makedirs(archivos_descomprimidos_folder)
-        res = getCredentials.run()
-        update_result(res)
-    except Exception as e:
-        update_result(f"Error al obtener credenciales: {e}")
+    """   try:
+          res = getCredentials.run()
+          update_result(res)
+      except Exception as e:
+          update_result(f"Error al obtener credenciales: {e}") """
+    descomprimir.run_clean_download_folder()
 
     def check_queue(message_queue):
         try:
@@ -105,16 +100,16 @@ def run_script_1():
     manager = multiprocessing.Manager()
     counter = manager.Value('i', 0)  # 'i' indica un entero
 
-    # Función para actualizar el contador en la interfaz
-    
     global total_credentials
     total_credentials = len(
-      multiprocessing_login.filtrar_credenciales_procesadas(get_credentials_list()))
-    
+        multiprocessing_login.filtrar_credenciales_procesadas(get_credentials_list()))
+    # Función para actualizar el contador en la interfaz
+
     def update_counter():
         # Obtener el total de credenciales
         completed = counter.value  # Logins completados
-        login_counter.set(f"Completados: {completed} De: {total_credentials}")
+        login_counter.set(
+            f"Completados: {completed}. Total: {total_credentials}")
         root.after(1000, update_counter)  # Actualizar cada segundo
 
     message_queue = queue.Queue()
@@ -125,6 +120,7 @@ def run_script_1():
     root.after(100, check_queue, message_queue)
     root.after(1000, update_counter)  # Iniciar la actualización del contador
 
+
 def get_credentials_list():
     """Obtiene la lista de credenciales desde el archivo."""
     credentials_file = get_resource_path(r".\data\Credentials.txt")
@@ -132,6 +128,11 @@ def get_credentials_list():
         credentials = [line.strip().replace('[', '').replace(']', '').split()
                        for line in file.readlines()]
     return credentials
+
+
+def update_files_counter():
+    files_counter.set(
+        f"La carpeta de descargas tiene {descomprimir.count_files_in_folder()} archivos.")
 
 
 def run_spreadsheet_writer():
@@ -156,13 +157,15 @@ def run_spreadsheet_writer():
         messages = spreadsheetWriter.run(worksheet_name, file_name)
         update_message3_area(f"{messages}")
         update_result("✅ Los datos han sido cargados en la hoja de cálculo.")
-        run_eliminar_archivos()
+        descomprimir.run_clean_extract_folder()
+        update_files_counter()
     except Exception as e:
         update_result(f"❌ Error al cargar datos: {e}")
 
 
 def run_eliminar_archivos():
-    descomprimir.run_clean_download_folder()
+    descomprimir.run_clean_extract_folder()
+    update_files_counter()
     update_result("✅ La carpeta de archivos ha sido limpiada correctamente.")
 
 
@@ -269,53 +272,15 @@ def open_file_explorer():
     folder_path = get_resource_path(r"data\archivosDescomprimidos")
     os.startfile(folder_path)
 
-def update_input_field(*args):
-      if selected_option.get() == "Otro":
-          # Habilitar el campo de entrada
-          input_field.config(state=tk.NORMAL)
-      else:
-          # Deshabilitar el campo de entrada
-          input_field.config(state=tk.DISABLED)
 
 if __name__ == "__main__":
     multiprocessing.set_start_method("spawn")
     root = tk.Tk()
 
-    # Centrar la ventana en la pantalla
     root.config(bg="#ffe5ee")
     root.iconbitmap(get_resource_path(r'.\assets\iconoInterfaz.ico'))
     root.title("Facturador")
-
-    # Definir el tamaño de la ventana
-    root.geometry("800x800")
-
-    # Crear el canvas y la barra de desplazamiento
-    canvas = tk.Canvas(root, bg="#ffe5ee")
-    scroll_y = tk.Scrollbar(root, orient="vertical", command=canvas.yview)
-    canvas.config(yscrollcommand=scroll_y.set)
-
-    # Centrar el canvas en la ventana
-    root.grid_rowconfigure(0, weight=1)
-    root.grid_columnconfigure(0, weight=1)
-    canvas.grid(row=0, column=0, sticky="nsew")
-    scroll_y.grid(row=0, column=1, sticky="ns")
-    
-    # Crear un frame dentro del canvas
-    scrollable_frame = tk.Frame(canvas, bg="#ffe5ee")
-
-    # Crear un frame contenedor para centrar el contenido
-    container_frame = tk.Frame(scrollable_frame, bg="#ffe5ee")
-    container_frame.pack(expand=True)
-
-    # Crear un window en el canvas para agregar el frame
-    canvas.create_window((0, 0), window=scrollable_frame, anchor="n")
-
-    # Configurar el scroll
-    scrollable_frame.bind(
-        "<Configure>", lambda e: canvas.configure(scrollregion=canvas.bbox("all")))
-
-    # Habilitar scroll con la rueda del mouse
-    canvas.bind_all("<MouseWheel>", lambda event: canvas.yview_scroll(int(-1*(event.delta/120)), "units"))
+    root.geometry("1000x1000")
 
     button_color = "#d3a6cc"
     hover_color = "#dbbad6"
@@ -325,7 +290,7 @@ if __name__ == "__main__":
 
     # Crear el botón de ayuda
     help_button = tk.Button(
-        container_frame,
+        root,
         text="?",
         command=show_help,
         font=('Arial', 10, 'bold'),
@@ -340,123 +305,155 @@ if __name__ == "__main__":
     # Crear un ToolTip para el botón de ayuda
     tooltip = ToolTip(help_button, "Haz clic para ver el instructivo.")
 
-    # Etiqueta para mostrar el resultado
+    # Etiqueta para mostrar el resultado (centrada arriba de ambos frames)
     result_text = tk.StringVar()
-    result_label = tk.Label(container_frame, textvariable=result_text,
+    result_label = tk.Label(root, textvariable=result_text,
                             wraplength=500, font=('Arial', 14), bg="#ffe5ee", fg=text_color)
-    result_label.pack(pady=20)
+    result_label.pack(side=tk.TOP, pady=20,
+                      anchor=tk.CENTER)  # Centrada arriba
+
+    # Crear dos Frames principales
+    left_frame = tk.Frame(root, bg="#ffe5ee")
+    left_frame.pack(side=tk.LEFT, fill=tk.BOTH, expand=True, padx=10, pady=10)
+
+    right_frame = tk.Frame(root, bg="#ffe5ee")
+    right_frame.pack(side=tk.RIGHT, fill=tk.BOTH,
+                     expand=True, padx=10, pady=10)
+    # Título para la sección izquierda: "Descarga de archivos"
+    left_title = tk.Label(
+        left_frame,
+        text="Descarga de archivos",
+        font=('Arial', 16, 'bold'),
+        bg="#ffe5ee",
+        fg=text_color
+    )
+    left_title.grid(row=0, column=0, columnspan=2, pady=10, sticky="ew")
 
     # Lista desplegable con opciones
     options_facturacion = ["Mensual", "Anual"]
     selected_option_facturacion = tk.StringVar(root)
     selected_option_facturacion.set(options_facturacion[0])
 
-    # Frame para organizar todos los elementos
-    button_frame = tk.Frame(container_frame, bg="#ffe5ee")
-    button_frame.pack(pady=10)
+    # Etiqueta para mostrar los archivos
+    files_counter = tk.StringVar()
+    files_counter.set(
+        f"La carpeta de descargas tiene {descomprimir.count_files_in_folder()} archivos.")
+    files_counter_label = tk.Label(left_frame, textvariable=files_counter, font=(
+        'Arial', 12), bg="#ffe5ee", fg=text_color)
+    files_counter_label.grid(
+        row=1, column=0, columnspan=2, pady=10, sticky="ew")
 
-    # Crear el OptionMenu dentro del button_frame
-    dropdown_menu_periodo = tk.OptionMenu(
-        button_frame, selected_option_facturacion, *options_facturacion)
-    dropdown_menu_periodo.config(
-        font=('Arial', 12), bg=text_box_bg, fg=text_color)
-    dropdown_menu_periodo.pack(side=tk.LEFT, padx=5)
-
-    # Variable para el contador de logins
-    login_counter = tk.StringVar()
-    login_counter.set("Completados: 0  De: 0")
-
-    # Etiqueta para mostrar el contador de logins
-    login_counter_label = tk.Label(container_frame, textvariable=login_counter, font=(
-        'Arial', 14), bg="#ffe5ee", fg=text_color)
-    login_counter_label.pack(pady=10)
-
-    # Crear los botones
-    button1 = tk.Button(button_frame, text="Obtener archivos",
-                        command=run_script_1, width=20, height=2, font=('Arial', 14), bg=button_color, fg=text_color)
-    button1.pack(side=tk.LEFT, padx=5)
-    button1.bind("<Enter>", lambda e: on_enter(
-        e, button1, hover_color))
-    button1.bind("<Leave>", lambda e: on_leave(e, button1, button_color))
-
-    buttonBorrado = tk.Button(button_frame, text="Borrar archivos",
+    # Botones de borrar y abrir carpeta
+    buttonBorrado = tk.Button(left_frame, text="Borrar archivos",
                               command=run_eliminar_archivos, width=15, height=2, font=('Arial', 14), bg=button_color, fg=text_color)
-    buttonBorrado.pack(side=tk.LEFT, padx=5)
+    buttonBorrado.grid(row=2, column=0, padx=5, sticky="ew")
     buttonBorrado.bind("<Enter>", lambda e: on_enter(
         e, buttonBorrado, hover_color))
     buttonBorrado.bind("<Leave>", lambda e: on_leave(
         e, buttonBorrado, button_color))
 
-    buttonAbirCarpeta = tk.Button(button_frame, text="Abrir carpeta",
+    buttonAbirCarpeta = tk.Button(left_frame, text="Abrir carpeta",
                                   command=open_file_explorer, width=15, height=2, font=('Arial', 14), bg=button_color, fg=text_color)
-    buttonAbirCarpeta.pack(side=tk.LEFT, padx=5)
+    buttonAbirCarpeta.grid(row=2, column=1, padx=5, sticky="ew")
     buttonAbirCarpeta.bind("<Enter>", lambda e: on_enter(
         e, buttonAbirCarpeta, hover_color))
     buttonAbirCarpeta.bind("<Leave>", lambda e: on_leave(
         e, buttonAbirCarpeta, button_color))
 
-    # Frame para organizar los mensajes
-    message_frame = tk.Frame(container_frame, bg="#ffe5ee")
-    message_frame.pack(pady=10)
+    # Crear el OptionMenu dentro del button_frame
+    dropdown_menu_periodo = tk.OptionMenu(
+        left_frame, selected_option_facturacion, *options_facturacion)
+    dropdown_menu_periodo.config(
+        font=('Arial', 12), bg="#ffe5ee", fg=text_color)
+    dropdown_menu_periodo.grid(row=3, column=0, padx=5, sticky="ew")
+
+    # Botón para obtener archivos
+    button1 = tk.Button(left_frame, text="Obtener archivos",
+                        command=run_script_1, width=20, height=2, font=('Arial', 14), bg=button_color, fg=text_color)
+    button1.grid(row=3, column=1, padx=5, pady=5, sticky="ew")
+    button1.bind("<Enter>", lambda e: on_enter(e, button1, hover_color))
+    button1.bind("<Leave>", lambda e: on_leave(e, button1, button_color))
+
+    # Variable para el contador de logins
+    login_counter = tk.StringVar()
+    login_counter.set("Completados: -. Total: -")
+
+    # Etiqueta para mostrar el contador de logins
+    login_counter_label = tk.Label(left_frame, textvariable=login_counter, font=(
+        'Arial', 14), bg="#ffe5ee", fg=text_color)
+    login_counter_label.grid(
+        row=4, column=0, columnspan=2, pady=10, sticky="ew")
 
     # Etiqueta para "Mensajes de la descarga de archivos"
-    login_title = tk.Label(
-        message_frame, text="Mensajes de la descarga de archivos", font=('Arial', 12, 'bold'), bg=label_color, fg=text_color)
-    login_title.grid(row=0, column=0, padx=5, pady=5)
+    tk.Label(left_frame, text="Mensajes de la descarga de archivos", font=('Arial', 12, 'bold'),
+             bg=label_color, fg=text_color).grid(row=6, column=0, columnspan=2, pady=5)
 
-    # Cuadro de texto para "Mensajes de la descarga de archivos"
-    message_text = tk.Text(message_frame, height=10,
-                           width=100, bg=text_box_bg, fg=text_color)
-    message_text.grid(row=1, column=0, padx=5, pady=5)
-    message_text.config(state=tk.DISABLED)
+    message_text = tk.Text(left_frame, state=tk.DISABLED, height=5, width=40,
+                           bg=text_box_bg, fg=text_color)
+    message_text.grid(row=7, column=0, columnspan=2,
+                      padx=5, pady=5, sticky="nsew")
 
-    # Entrada para "Nombre del archivo:"
-    tk.Label(container_frame, text="Nombre del archivo:",
-             font=('Arial', 12), bg="#ffe5ee", fg=text_color).pack(pady=5)
+    # Configurar expansión de filas y columnas en left_frame
+    left_frame.columnconfigure(0, weight=1)
+    left_frame.columnconfigure(1, weight=1)
+    left_frame.rowconfigure(7, weight=1)
+
+    # Sección derecha - Carga de resultados
+    tk.Label(right_frame, text="Carga de resultados", font=('Arial', 16, 'bold'),
+             bg=label_color, fg=text_color).grid(row=0, column=0, columnspan=2, pady=10)
+
+    tk.Label(right_frame, text="Nombre del archivo:", font=('Arial', 12),
+             bg=label_color, fg=text_color).grid(row=1, column=0, columnspan=2, pady=5, sticky="ew")
 
     options = ["2025 claves y facturaciones", "Facturacion anual", "Otro"]
-    selected_option = tk.StringVar(root)
+    selected_option = tk.StringVar()
     selected_option.set(options[0])
+
+    dropdown_menu = tk.OptionMenu(right_frame, selected_option, *options)
+    dropdown_menu.config(font=('Arial', 12), bg=text_box_bg, fg=text_color)
+    dropdown_menu.grid(row=2, column=0, padx=5, pady=5, sticky="ew")
+
+    input_field = tk.Entry(right_frame, state=tk.DISABLED, font=('Arial', 12),
+                           bg=text_box_bg, fg=text_color)
+    input_field.grid(row=2, column=1, columnspan=2,
+                     padx=5, pady=5, sticky="ew")
 
     def update_input_field(*args):
         if selected_option.get() == "Otro":
+            # Habilitar el campo de entrada
             input_field.config(state=tk.NORMAL)
         else:
+            # Deshabilitar el campo de entrada
             input_field.config(state=tk.DISABLED)
-
-    dropdown_menu = tk.OptionMenu(container_frame, selected_option, *options)
-    dropdown_menu.config(font=('Arial', 12), bg=text_box_bg, fg=text_color)
-    dropdown_menu.pack(pady=5)
-
-    input_field = tk.Entry(container_frame, state=tk.DISABLED, font=(
-        'Arial', 12), bg=text_box_bg, fg=text_color)
-    input_field.pack(pady=5)
 
     selected_option.trace("w", update_input_field)
 
-    tk.Label(container_frame, text="Nombre de la hoja de cálculo:",
-             font=('Arial', 12), bg="#ffe5ee", fg=text_color).pack(pady=5)
+    tk.Label(right_frame, text="Nombre de la hoja:", font=('Arial', 12),
+             bg=label_color, fg=text_color).grid(row=3, column=0, columnspan=2, pady=5, sticky="ew")
 
-    entry1 = tk.Entry(container_frame, font=('Arial', 12), width=40,
+    entry1 = tk.Entry(right_frame, font=('Arial', 12),
                       bg=text_box_bg, fg=text_color)
-    entry1.pack(pady=5)
+    entry1.grid(row=4, column=0, columnspan=2, padx=5, pady=5, sticky="ew")
 
-    button2 = tk.Button(container_frame, text="Cargar datos",
-                        command=run_spreadsheet_writer, width=20, height=2, font=('Arial', 14), bg=button_color, fg=text_color)
-    button2.pack(pady=10)
-    button2.bind("<Enter>", lambda e: on_enter(e, button2, hover_color))
-    button2.bind("<Leave>", lambda e: on_leave(e, button2, button_color))
+    button2 = tk.Button(right_frame, text="Cargar datos", font=(
+        'Arial', 14), command=run_spreadsheet_writer, bg=button_color, fg=text_color)
+    button2.grid(row=5, column=0, columnspan=2, pady=10, sticky="ew")
+    button2.bind("<Enter>", lambda e: on_enter(e, button1, hover_color))
+    button2.bind("<Leave>", lambda e: on_leave(e, button1, button_color))
 
-    writer_title = tk.Label(
-        container_frame, text="Mensajes del escritor", font=('Arial', 12, 'bold'), bg=label_color, fg=text_color)
-    writer_title.pack(pady=(10, 0))
+    tk.Label(right_frame, text="Mensajes del escritor", font=('Arial', 12, 'bold'),
+             bg=label_color, fg=text_color).grid(row=6, column=0, columnspan=2, pady=5)
 
-    message_text3 = tk.Text(container_frame, height=10, width=100,
+    message_text3 = tk.Text(right_frame, state=tk.DISABLED, height=5, width=40,
                             bg=text_box_bg, fg=text_color)
-    message_text3.pack(pady=20)
-    message_text3.config(state=tk.DISABLED)
+    message_text3.grid(row=7, column=0, columnspan=2,
+                       padx=5, pady=5, sticky="nsew")
 
-    root.protocol("WM_DELETE_WINDOW", on_closing)
+    # Configurar expandibilidad de filas y columnas en right_frame
+    right_frame.columnconfigure(0, weight=1)
+    right_frame.columnconfigure(1, weight=1)
+    right_frame.rowconfigure(7, weight=1)
 
+    root.protocol("WM_DELETE_WINDOW", root.quit)
     login_pool = None
     root.mainloop()

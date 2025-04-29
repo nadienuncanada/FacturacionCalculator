@@ -14,6 +14,8 @@ tk = "^0.1.0"
 selenium = "^4.25.0"
 nuitka = "^2.6.2"
 psutil = "^6.1.1"
+webdriver-manager = "^4.0.2"
+certifi = "^2025.4.26"
 
 
 [build-system]

@@ -3,6 +3,7 @@ import Login as Login
 import os
 import descomprimir as descomprimir
 from routesResolver import get_resource_path
+from webdriver_manager.chrome import ChromeDriverManager
 
 
 def obtener_usuarios_desde_archivos(ruta_carpeta):
@@ -35,7 +36,8 @@ def filtrar_credenciales_procesadas(credentials):
 
 
 def start_login_processes(periodo_facturacion, counter):
-    path_to_chromedriver = get_resource_path(r".\drivers\chromedriver.exe")
+    chrome_driver_manager = ChromeDriverManager()
+    path_to_chromedriver = chrome_driver_manager.install()
     download_path = get_resource_path(r"data\archivos")
     credentials_file = get_resource_path(r"data/Credentials.txt")
 

@@ -61,7 +61,7 @@ def process_files(message_queue, counter):
             (final_message, "✅ Los procesos de login han finalizado."))
         update_files_counter()
     except Exception as e:
-        error_message = f"❌ Error al iniciar sesiones (pedí ayuda, probablemente se actualizó Chrome)"
+        error_message = f"❌ Error al iniciar sesiones (pedí ayuda)"
         message_queue.put((None, error_message))
         print(e)
 
@@ -77,12 +77,12 @@ def process_files(message_queue, counter):
 def run_script_1():
     update_files_counter()
     global login_processes
-    """   try:
-          res = getCredentials.run()
-          update_result(res)
-      except Exception as e:
-          update_result(f"Error al obtener credenciales: {e}") """
-    descomprimir.run_clean_download_folder()
+    """ try:
+        res = getCredentials.run()
+        update_result(res)
+    except Exception as e:
+        update_result(f"Error al obtener credenciales: {e}")
+    """
 
     def check_queue(message_queue):
         try:
@@ -158,6 +158,7 @@ def run_spreadsheet_writer():
         update_message3_area(f"{messages}")
         update_result("✅ Los datos han sido cargados en la hoja de cálculo.")
         descomprimir.run_clean_extract_folder()
+        descomprimir.clean_download_folder()
         update_files_counter()
     except Exception as e:
         update_result(f"❌ Error al cargar datos: {e}")
@@ -186,7 +187,6 @@ def on_closing():
 
     root.quit()
     root.destroy()
-    os._exit()
 
 
 class ToolTip:
@@ -276,6 +276,7 @@ def open_file_explorer():
 if __name__ == "__main__":
     multiprocessing.set_start_method("spawn")
     root = tk.Tk()
+    descomprimir.run_clean_download_folder()
 
     root.config(bg="#ffe5ee")
     root.iconbitmap(get_resource_path(r'.\assets\iconoInterfaz.ico'))
